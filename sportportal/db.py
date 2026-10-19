@@ -50,3 +50,23 @@ def objavljeni_clanci():
         " ORDER BY datum_objave DESC"
         " LIMIT 20"
     ).fetchall()
+
+
+def admin():
+    """Admin iz baze (korisničko ime i hash lozinke), ili None ako ga još nema."""
+    return get_db().execute(
+        "SELECT korisnicko_ime, hash_lozinke FROM admin WHERE id = 1"
+    ).fetchone()
+
+
+def sacuvaj_admina(korisnicko_ime, hash_lozinke):
+    """Pravi admina, ili mu mijenja podatke ako već postoji (uvijek id = 1)."""
+    baza = get_db()
+    baza.execute(
+        "INSERT INTO admin (id, korisnicko_ime, hash_lozinke) VALUES (1, ?, ?)"
+        " ON CONFLICT (id) DO UPDATE SET"
+        " korisnicko_ime = excluded.korisnicko_ime,"
+        " hash_lozinke = excluded.hash_lozinke",
+        (korisnicko_ime, hash_lozinke),
+    )
+    baza.commit()

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block naslov %}Prijava – {% endblock %}
+
+{% block sadrzaj %}
+  <h1>Prijava</h1>
+
+  {% if greska %}
+    <p class="greska" role="alert">{{ greska }}</p>
+  {% endif %}
+
+  <form method="post">
+    <label>
+      Korisničko ime
+      <input name="korisnicko_ime" value="{{ request.form.korisnicko_ime }}" required autofocus>
+    </label>
+    <label>
+      Lozinka
+      <input type="password" name="lozinka" required>
+    </label>
+    <button type="submit">Prijavi se</button>
+  </form>
+{% endblock %}
