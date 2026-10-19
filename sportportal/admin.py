@@ -1,5 +1,13 @@
 import click
-from flask import Blueprint, redirect, render_template, request, session, url_for
+from flask import (
+    Blueprint,
+    abort,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from flask.cli import with_appcontext
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -78,3 +86,57 @@ def prijava():
 def odjava():
     session.clear()
     return redirect(url_for("admin.prijava"))
+
+
+@bp.route("/kategorije", methods=["GET", "POST"])
+def kategorije():
+    greska = None
+    if request.method == "POST":
+        greska = db.dodaj_kategoriju(request.form["ime"])
+        if greska is None:
+            return redirect(url_for("admin.kategorije"))
+
+    return render_template(
+        "admin/kategorije.html", kategorije=db.kategorije(), greska=greska
+    )
+
+
+@bp.route("/kategorije/<int:id_kategorije>/preimenuj", methods=["GET", "POST"])
+def preimenuj_kategoriju(id_kategorije):
+    kategorija = db.kategorija(id_kategorije)
+    if kategorija is None:
+        abort(404)
+
+    greska = None
+    ime = kategorija["ime"]
+    if request.method == "POST":
+        ime = request.form["ime"]
+        greska = db.preimenuj_kategoriju(id_kategorije, ime)
+        if greska is None:
+            return redirect(url_for("admin.kategorije"))
+
+    return render_template(
+        "admin/preimenuj_kategoriju.html",
+        kategorija=kategorija,
+        ime=ime,
+        greska=greska,
+    )
+
+
+# Brisanje ide u dva koraka: GET prikaže stranicu za potvrdu, a tek dugme
+# na njoj (POST) zaista briše kategoriju.
+@bp.route("/kategorije/<int:id_kategorije>/obrisi", methods=["GET", "POST"])
+def obrisi_kategoriju(id_kategorije):
+    kategorija = db.kategorija(id_kategorije)
+    if kategorija is None:
+        abort(404)
+
+    greska = None
+    if request.method == "POST":
+        greska = db.obrisi_kategoriju(id_kategorije)
+        if greska is None:
+            return redirect(url_for("admin.kategorije"))
+
+    return render_template(
+        "admin/obrisi_kategoriju.html", kategorija=kategorija, greska=greska
+    )

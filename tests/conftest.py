@@ -27,3 +27,14 @@ def client(app):
 def runner(app):
     """Pokreće komande u terminalu (Flask CLI)."""
     return app.test_cli_runner()
+
+
+@pytest.fixture
+def admin_klijent(client, runner):
+    """Klijent na kojem je admin već prijavljen."""
+    runner.invoke(args=["napravi-admina"], input="marko\ntajna123\ntajna123\n")
+    client.post(
+        "/admin/prijava",
+        data={"korisnicko_ime": "marko", "lozinka": "tajna123"},
+    )
+    return client

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block naslov %}Obriši kategoriju – {% endblock %}
+
+{% block sadrzaj %}
+  <p><a href="{{ url_for('admin.kategorije') }}">← Kategorije</a></p>
+  <h1>Obriši kategoriju</h1>
+
+  {% if greska %}
+    <p class="greska" role="alert">{{ greska }}</p>
+  {% else %}
+    <p>Da li sigurno želiš obrisati kategoriju {{ kategorija.ime }}? Ovo se ne može vratiti.</p>
+
+    <form method="post">
+      <button type="submit">Da, obriši</button>
+    </form>
+  {% endif %}
+{% endblock %}
