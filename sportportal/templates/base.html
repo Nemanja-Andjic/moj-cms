@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block naslov %}{% endblock %}{{ ime_portala }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='pico.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='stil.css') }}">
+</head>
+<body>
+  <header class="zaglavlje">
+    <div class="container">
+      <a href="{{ url_for('javni.naslovna') }}" class="ime-portala">{{ ime_portala }}</a>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block sadrzaj %}{% endblock %}
+  </main>
+</body>
+</html>
