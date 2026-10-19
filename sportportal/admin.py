@@ -140,3 +140,73 @@ def obrisi_kategoriju(id_kategorije):
     return render_template(
         "admin/obrisi_kategoriju.html", kategorija=kategorija, greska=greska
     )
+
+
+@bp.route("/clanci")
+def clanci():
+    return render_template("admin/clanci.html", clanci=db.clanci())
+
+
+@bp.route("/clanci/novi", methods=["GET", "POST"])
+def novi_clanak():
+    greska = None
+    clanak = {}
+    if request.method == "POST":
+        clanak = request.form
+        greska = db.dodaj_clanak(
+            clanak["naslov"], clanak["uvod"], clanak["tekst"], clanak["kategorija_id"]
+        )
+        if greska is None:
+            return redirect(url_for("admin.clanci"))
+
+    return render_template(
+        "admin/clanak_forma.html",
+        naslov_stranice="Novi članak",
+        clanak=clanak,
+        kategorije=db.kategorije(),
+        greska=greska,
+    )
+
+
+# Izmjena koristi istu formu kao novi članak.
+@bp.route("/clanci/<int:id_clanka>/izmijeni", methods=["GET", "POST"])
+def izmijeni_clanak(id_clanka):
+    clanak = db.clanak(id_clanka)
+    if clanak is None:
+        abort(404)
+
+    greska = None
+    if request.method == "POST":
+        clanak = request.form
+        greska = db.izmijeni_clanak(
+            id_clanka,
+            clanak["naslov"],
+            clanak["uvod"],
+            clanak["tekst"],
+            clanak["kategorija_id"],
+        )
+        if greska is None:
+            return redirect(url_for("admin.clanci"))
+
+    return render_template(
+        "admin/clanak_forma.html",
+        naslov_stranice="Izmijeni članak",
+        clanak=clanak,
+        kategorije=db.kategorije(),
+        greska=greska,
+    )
+
+
+# Kao i kod kategorija: GET prikaže stranicu za potvrdu, a tek dugme na
+# njoj (POST) zaista briše članak.
+@bp.route("/clanci/<int:id_clanka>/obrisi", methods=["GET", "POST"])
+def obrisi_clanak(id_clanka):
+    clanak = db.clanak(id_clanka)
+    if clanak is None:
+        abort(404)
+
+    if request.method == "POST":
+        db.obrisi_clanak(id_clanka)
+        return redirect(url_for("admin.clanci"))
+
+    return render_template("admin/obrisi_clanak.html", clanak=clanak)

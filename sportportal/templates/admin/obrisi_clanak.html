@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block naslov %}Obriši članak – {% endblock %}
+
+{% block sadrzaj %}
+  <p><a href="{{ url_for('admin.clanci') }}">← Članci</a></p>
+  <h1>Obriši članak</h1>
+
+  <p>Da li sigurno želiš obrisati članak {{ clanak.naslov }}? Ovo se ne može vratiti.</p>
+
+  <form method="post">
+    <button type="submit">Da, obriši</button>
+  </form>
+{% endblock %}

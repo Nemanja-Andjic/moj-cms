@@ -1,7 +1,5 @@
 import pytest
 
-from sportportal.db import get_db
-
 
 def dodaj(klijent, ime):
     return klijent.post("/admin/kategorije", data={"ime": ime}, follow_redirects=True)
@@ -28,28 +26,21 @@ def test_dodata_kategorija_se_vidi_na_stranici_kategorija(admin_klijent):
     assert "Fudbal" in stranica_kategorija(admin_klijent)
 
 
-def ubaci_clanak(app, ime_kategorije):
-    """Priprema: članak u datoj kategoriji.
-
-    PRIVREMENO: admin još ne može pisati članke kroz admin panel, pa ga
-    ubacujemo direktno u bazu. Kad članci dobiju svoje stranice (issue #8),
-    ovo treba zamijeniti pravljenjem članka preko admin panela.
-    """
-    with app.app_context():
-        baza = get_db()
-        baza.execute(
-            "INSERT INTO clanak (naslov, uvod, tekst, kategorija_id)"
-            " SELECT 'Naslov', 'Uvod', 'Tekst', id FROM kategorija WHERE ime = ?",
-            (ime_kategorije,),
-        )
-        baza.commit()
+def napravi_clanak(klijent, id_kategorije):
+    """Priprema: nacrt u datoj kategoriji, napravljen kroz admin panel."""
+    klijent.post("/admin/clanci/novi", data={
+        "naslov": "Naslov",
+        "uvod": "Uvod",
+        "tekst": "Tekst",
+        "kategorija_id": id_kategorije,
+    })
 
 
-def test_stranica_kategorija_prikazuje_broj_clanaka(app, admin_klijent):
+def test_stranica_kategorija_prikazuje_broj_clanaka(admin_klijent):
     dodaj(admin_klijent, "Fudbal")
     dodaj(admin_klijent, "Tenis")
-    ubaci_clanak(app, "Fudbal")
-    ubaci_clanak(app, "Fudbal")
+    napravi_clanak(admin_klijent, 1)
+    napravi_clanak(admin_klijent, 1)
 
     html = stranica_kategorija(admin_klijent)
 
@@ -178,11 +169,11 @@ def test_admin_moze_obrisati_praznu_kategoriju(admin_klijent):
     (5, "Kategorija Fudbal ima 5 članaka i ne može se obrisati."),
 ])
 def test_kategorija_sa_clancima_se_ne_moze_obrisati(
-    app, admin_klijent, broj_clanaka, poruka
+    admin_klijent, broj_clanaka, poruka
 ):
     dodaj(admin_klijent, "Fudbal")
     for _ in range(broj_clanaka):
-        ubaci_clanak(app, "Fudbal")
+        napravi_clanak(admin_klijent, 1)
     assert 'href="/admin/kategorije/1/obrisi"' not in stranica_kategorija(admin_klijent)
 
     odgovor = admin_klijent.post("/admin/kategorije/1/obrisi", follow_redirects=True)

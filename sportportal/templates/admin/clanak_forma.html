@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block naslov %}{{ naslov_stranice }} – {% endblock %}
+
+{% block sadrzaj %}
+  <p><a href="{{ url_for('admin.clanci') }}">← Članci</a></p>
+  <h1>{{ naslov_stranice }}</h1>
+
+  {% if greska %}
+    <p class="greska" role="alert">{{ greska }}</p>
+  {% endif %}
+
+  {% if not kategorije %}
+    {# Članak mora imati kategoriju, pa bez kategorija nema ni forme. #}
+    <p>
+      Prvo napravi bar jednu kategoriju na stranici
+      <a href="{{ url_for('admin.kategorije') }}">Kategorije</a>.
+    </p>
+  {% else %}
+    {# `clanak` je ono što je admin već unio (prazno kod novog članka),
+       ili postojeći članak iz baze kad se forma tek otvori za izmjenu. #}
+    <form method="post">
+      <label>
+        Naslov
+        <input name="naslov" value="{{ clanak.naslov }}" required>
+      </label>
+      <label>
+        Uvod
+        <textarea name="uvod" rows="2" required>{{ clanak.uvod }}</textarea>
+      </label>
+      <label>
+        Tekst
+        <textarea name="tekst" rows="12" required>{{ clanak.tekst }}</textarea>
+      </label>
+      <label>
+        Kategorija
+        <select name="kategorija_id" required>
+          <option value="">Izaberi kategoriju</option>
+          {% for kategorija in kategorije %}
+            {# Iz forme kategorija stiže kao tekst, a iz baze kao broj. #}
+            <option value="{{ kategorija.id }}"{% if kategorija.id|string == clanak.kategorija_id|string %} selected{% endif %}>{{ kategorija.ime }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Sačuvaj</button>
+    </form>
+  {% endif %}
+{% endblock %}

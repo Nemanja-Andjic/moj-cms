@@ -168,3 +168,85 @@ def clanaka(broj):
     if broj % 10 in (2, 3, 4) and broj % 100 not in (12, 13, 14):
         return "članka"
     return "članaka"
+
+
+def clanci():
+    """Svi članci (nacrti i objavljeni) sa imenom kategorije, najnoviji gore."""
+    return get_db().execute(
+        "SELECT clanak.id, naslov, stanje, kategorija.ime AS kategorija"
+        " FROM clanak JOIN kategorija ON kategorija.id = clanak.kategorija_id"
+        # Članci napravljeni u istoj sekundi: noviji ima veći id.
+        " ORDER BY napravljen DESC, clanak.id DESC"
+    ).fetchall()
+
+
+def clanak(id_clanka):
+    """Jedan članak (sva polja), ili None ako ne postoji."""
+    return get_db().execute(
+        "SELECT id, naslov, uvod, tekst, kategorija_id, stanje"
+        " FROM clanak WHERE id = ?",
+        (id_clanka,),
+    ).fetchone()
+
+
+def greska_u_clanku(naslov, uvod, tekst, kategorija_id):
+    """Vraća poruku o grešci ako u članku nešto nedostaje, inače None.
+
+    Tekstualna polja moraju već biti bez razmaka na početku i kraju.
+    """
+    if not naslov:
+        return "Naslov je obavezan."
+    if not uvod:
+        return "Uvod je obavezan."
+    if not tekst:
+        return "Tekst je obavezan."
+    # Kategorija mora postojati u bazi, a ne samo biti poslata.
+    if not kategorija_id.isdigit() or kategorija(int(kategorija_id)) is None:
+        return "Kategorija je obavezna."
+    return None
+
+
+def dodaj_clanak(naslov, uvod, tekst, kategorija_id):
+    """Pravi novi članak. Vraća poruku o grešci, ili None ako je sačuvan.
+
+    Svaki novi članak je nacrt (to je podrazumijevano stanje u bazi).
+    """
+    naslov, uvod, tekst = naslov.strip(), uvod.strip(), tekst.strip()
+    greska = greska_u_clanku(naslov, uvod, tekst, kategorija_id)
+    if greska is not None:
+        return greska
+
+    baza = get_db()
+    baza.execute(
+        "INSERT INTO clanak (naslov, uvod, tekst, kategorija_id) VALUES (?, ?, ?, ?)",
+        (naslov, uvod, tekst, int(kategorija_id)),
+    )
+    baza.commit()
+    return None
+
+
+def izmijeni_clanak(id_clanka, naslov, uvod, tekst, kategorija_id):
+    """Mijenja članak. Vraća poruku o grešci, ili None ako je sačuvan.
+
+    Stanje članka (nacrt ili objavljen) ostaje kakvo je bilo.
+    """
+    naslov, uvod, tekst = naslov.strip(), uvod.strip(), tekst.strip()
+    greska = greska_u_clanku(naslov, uvod, tekst, kategorija_id)
+    if greska is not None:
+        return greska
+
+    baza = get_db()
+    baza.execute(
+        "UPDATE clanak SET naslov = ?, uvod = ?, tekst = ?, kategorija_id = ?"
+        " WHERE id = ?",
+        (naslov, uvod, tekst, int(kategorija_id), id_clanka),
+    )
+    baza.commit()
+    return None
+
+
+def obrisi_clanak(id_clanka):
+    """Trajno briše članak, bez obzira da li je nacrt ili objavljen."""
+    baza = get_db()
+    baza.execute("DELETE FROM clanak WHERE id = ?", (id_clanka,))
+    baza.commit()
