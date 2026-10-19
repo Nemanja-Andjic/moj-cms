@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block naslov %}Stranica nije pronađena – {% endblock %}
+
+{% block sadrzaj %}
+  <h1>Stranica nije pronađena</h1>
+  <p><a href="{{ url_for('javni.naslovna') }}">Nazad na naslovnu</a></p>
+{% endblock %}

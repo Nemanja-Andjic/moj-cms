@@ -1,0 +1,19 @@
+/* Mali vlastiti CSS, dodaje se preko Pico.css-a. */
+
+.zaglavlje {
+  background: var(--pico-primary-background);
+  padding: 0.75rem 0;
+  margin-bottom: 2rem;
+}
+
+.ime-portala {
+  color: var(--pico-primary-inverse);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ime-portala:hover {
+  color: var(--pico-primary-inverse);
+  text-decoration: underline;
+}
