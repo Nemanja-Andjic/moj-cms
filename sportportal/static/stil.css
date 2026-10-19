@@ -17,3 +17,7 @@
   color: var(--pico-primary-inverse);
   text-decoration: underline;
 }
+
+.greska {
+  color: var(--pico-del-color);
+}

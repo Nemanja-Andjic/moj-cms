@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block naslov %}Admin panel – {% endblock %}
+
+{% block sadrzaj %}
+  <h1>Admin panel</h1>
+
+  <form method="post" action="{{ url_for('admin.odjava') }}">
+    <button type="submit" class="secondary">Odjava</button>
+  </form>
+{% endblock %}
