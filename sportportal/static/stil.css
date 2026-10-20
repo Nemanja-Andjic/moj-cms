@@ -21,3 +21,33 @@
 .greska {
   color: var(--pico-del-color);
 }
+
+/* Datum i kategorija ispod naslova članka. */
+.podaci-clanka {
+  color: var(--pico-muted-color);
+  font-size: 0.9rem;
+}
+
+.uvod {
+  font-weight: 600;
+}
+
+/* Upozorenje kad admin pregleda nacrt. */
+.traka-nacrt {
+  background: var(--pico-mark-background-color);
+  color: var(--pico-mark-color);
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+}
+
+/* Linkovi i dugmad u listi članaka stoje u jednom redu. */
+.akcije a,
+.akcije form {
+  display: inline-block;
+  margin: 0 0.5rem 0 0;
+}
+
+.akcije button {
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+}

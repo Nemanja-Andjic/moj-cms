@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
 {% block sadrzaj %}
-  {% if not clanci %}
+  {% for clanak in clanci %}
+    <article>
+      <h2><a href="{{ url_for('javni.clanak', id_clanka=clanak.id) }}">{{ clanak.naslov }}</a></h2>
+      <p class="podaci-clanka">{{ clanak.kategorija }} · {{ clanak.datum_objave | datum_objave }}</p>
+      <p>{{ clanak.uvod }}</p>
+    </article>
+  {% else %}
     <p>Još nema objavljenih članaka.</p>
-  {% endif %}
+  {% endfor %}
 {% endblock %}

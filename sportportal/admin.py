@@ -210,3 +210,21 @@ def obrisi_clanak(id_clanka):
         return redirect(url_for("admin.clanci"))
 
     return render_template("admin/obrisi_clanak.html", clanak=clanak)
+
+
+@bp.route("/clanci/<int:id_clanka>/objavi", methods=["POST"])
+def objavi_clanak(id_clanka):
+    if db.clanak(id_clanka) is None:
+        abort(404)
+
+    db.objavi_clanak(id_clanka)
+    return redirect(url_for("admin.clanci"))
+
+
+@bp.route("/clanci/<int:id_clanka>/povuci", methods=["POST"])
+def povuci_clanak(id_clanka):
+    if db.clanak(id_clanka) is None:
+        abort(404)
+
+    db.povuci_clanak(id_clanka)
+    return redirect(url_for("admin.clanci"))

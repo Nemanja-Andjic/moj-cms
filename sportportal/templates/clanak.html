@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block naslov %}{{ clanak.naslov }} – {% endblock %}
+
+{% block sadrzaj %}
+  {% if clanak.stanje == 'nacrt' %}
+    <p class="traka-nacrt">Nacrt – posjetioci ovo ne vide</p>
+  {% endif %}
+
+  <article>
+    <h1>{{ clanak.naslov }}</h1>
+    <p class="podaci-clanka">
+      {{ clanak.kategorija }}{% if clanak.datum_objave %} · {{ clanak.datum_objave | datum_objave }}{% endif %}
+    </p>
+    <p class="uvod">{{ clanak.uvod }}</p>
+    {% for pasus in clanak.tekst | pasusi %}
+      <p>{{ pasus }}</p>
+    {% endfor %}
+  </article>
+{% endblock %}
