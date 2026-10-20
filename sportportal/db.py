@@ -47,7 +47,8 @@ def objavljeni_clanci():
         "SELECT clanak.id, naslov, uvod, datum_objave, kategorija.ime AS kategorija"
         " FROM clanak JOIN kategorija ON kategorija.id = clanak.kategorija_id"
         " WHERE stanje = 'objavljen'"
-        " ORDER BY datum_objave DESC"
+        # Članci objavljeni u istoj sekundi: noviji ima veći id.
+        " ORDER BY datum_objave DESC, clanak.id DESC"
         " LIMIT 20"
     ).fetchall()
 
@@ -189,6 +190,17 @@ def clanak(id_clanka):
     ).fetchone()
 
 
+def clanak_za_citanje(id_clanka):
+    """Članak sa imenom kategorije, za stranicu članka, ili None ako ne postoji."""
+    return get_db().execute(
+        "SELECT clanak.id, naslov, uvod, tekst, stanje, datum_objave,"
+        " kategorija.ime AS kategorija"
+        " FROM clanak JOIN kategorija ON kategorija.id = clanak.kategorija_id"
+        " WHERE clanak.id = ?",
+        (id_clanka,),
+    ).fetchone()
+
+
 def greska_u_clanku(naslov, uvod, tekst, kategorija_id):
     """Vraća poruku o grešci ako u članku nešto nedostaje, inače None.
 
@@ -249,4 +261,27 @@ def obrisi_clanak(id_clanka):
     """Trajno briše članak, bez obzira da li je nacrt ili objavljen."""
     baza = get_db()
     baza.execute("DELETE FROM clanak WHERE id = ?", (id_clanka,))
+    baza.commit()
+
+
+def objavi_clanak(id_clanka):
+    """Prebacuje članak u stanje objavljen.
+
+    Datum objave se postavlja samo pri prvom objavljivanju, pa povučen
+    pa ponovo objavljen članak zadržava prvobitni datum.
+    """
+    baza = get_db()
+    baza.execute(
+        "UPDATE clanak SET stanje = 'objavljen',"
+        " datum_objave = COALESCE(datum_objave, CURRENT_TIMESTAMP)"
+        " WHERE id = ?",
+        (id_clanka,),
+    )
+    baza.commit()
+
+
+def povuci_clanak(id_clanka):
+    """Vraća objavljen članak u nacrt. Datum objave ostaje zapamćen."""
+    baza = get_db()
+    baza.execute("UPDATE clanak SET stanje = 'nacrt' WHERE id = ?", (id_clanka,))
     baza.commit()

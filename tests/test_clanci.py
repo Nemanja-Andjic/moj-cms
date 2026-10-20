@@ -70,10 +70,10 @@ def test_lista_clanaka_prikazuje_najnoviji_clanak_gore(app, admin_klijent):
     )
 
 
-def test_lista_clanaka_prikazuje_objavljen_clanak(app, admin_klijent):
+def test_lista_clanaka_prikazuje_objavljen_clanak(admin_klijent):
     dodaj_kategoriju(admin_klijent, "Tenis")
     napravi_clanak(admin_klijent, "Finale")
-    objavi_direktno_u_bazi(app, 1)
+    objavi(admin_klijent, 1)
 
     assert (
         "<td>Finale</td> <td>Tenis</td> <td>Objavljen</td>"
@@ -126,17 +126,8 @@ def test_bez_kategorija_umjesto_forme_stoji_link_na_kategorije(admin_klijent):
     assert '<form method="post">' not in html
 
 
-def objavi_direktno_u_bazi(app, id_clanka):
-    """PRIVREMENO: dugme "Objavi" stiže u issue #9, pa članak objavljujemo
-    direktno u bazi."""
-    with app.app_context():
-        baza = get_db()
-        baza.execute(
-            "UPDATE clanak SET stanje = 'objavljen',"
-            " datum_objave = CURRENT_TIMESTAMP WHERE id = ?",
-            (id_clanka,),
-        )
-        baza.commit()
+def objavi(klijent, id_clanka):
+    klijent.post(f"/admin/clanci/{id_clanka}/objavi")
 
 
 def izmijeni(klijent, id_clanka, **polja):
@@ -169,12 +160,12 @@ def test_forma_za_izmjenu_prikazuje_postojeci_clanak(admin_klijent):
 
 
 @pytest.mark.parametrize("objavljen, stanje", [(False, "Nacrt"), (True, "Objavljen")])
-def test_izmjena_clanka_ne_mijenja_stanje(app, admin_klijent, objavljen, stanje):
+def test_izmjena_clanka_ne_mijenja_stanje(admin_klijent, objavljen, stanje):
     dodaj_kategoriju(admin_klijent, "Fudbal")
     dodaj_kategoriju(admin_klijent, "Tenis")
     napravi_clanak(admin_klijent, "Stari naslov")
     if objavljen:
-        objavi_direktno_u_bazi(app, 1)
+        objavi(admin_klijent, 1)
 
     izmijeni(admin_klijent, 1, naslov="  Novi naslov ", kategorija_id="2")
 
@@ -259,10 +250,10 @@ def test_baza_ne_dozvoljava_brisanje_kategorije_sa_nacrtom(app, admin_klijent):
             get_db().execute("DELETE FROM kategorija WHERE id = 1")
 
 
-def test_kategorija_sa_objavljenim_clankom_se_ne_moze_obrisati(app, admin_klijent):
+def test_kategorija_sa_objavljenim_clankom_se_ne_moze_obrisati(admin_klijent):
     dodaj_kategoriju(admin_klijent, "Fudbal")
     napravi_clanak(admin_klijent, "Derbi u subotu")
-    objavi_direktno_u_bazi(app, 1)
+    objavi(admin_klijent, 1)
 
     odgovor = admin_klijent.post("/admin/kategorije/1/obrisi")
 

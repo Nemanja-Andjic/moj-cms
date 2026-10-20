@@ -23,9 +23,19 @@
           <td>{{ clanak.naslov }}</td>
           <td>{{ clanak.kategorija }}</td>
           <td>{% if clanak.stanje == 'objavljen' %}Objavljen{% else %}Nacrt{% endif %}</td>
-          <td>
+          <td class="akcije">
+            <a href="{{ url_for('javni.clanak', id_clanka=clanak.id) }}">Pregled</a>
             <a href="{{ url_for('admin.izmijeni_clanak', id_clanka=clanak.id) }}">Izmijeni</a>
             <a href="{{ url_for('admin.obrisi_clanak', id_clanka=clanak.id) }}">Obriši</a>
+            {% if clanak.stanje == 'objavljen' %}
+              <form method="post" action="{{ url_for('admin.povuci_clanak', id_clanka=clanak.id) }}">
+                <button type="submit">Povuci</button>
+              </form>
+            {% else %}
+              <form method="post" action="{{ url_for('admin.objavi_clanak', id_clanka=clanak.id) }}">
+                <button type="submit">Objavi</button>
+              </form>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}
