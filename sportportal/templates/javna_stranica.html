@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{# Zajednički izgled stranica javnog sajta: ispod imena portala je meni sa svim kategorijama. #}
+{% block meni %}
+  <nav class="meni-kategorija">
+    <ul>
+      {% for kategorija in kategorije_za_meni() %}
+        <li><a href="{{ url_for('javni.kategorija', id_kategorije=kategorija.id) }}">{{ kategorija.ime }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+{% endblock %}

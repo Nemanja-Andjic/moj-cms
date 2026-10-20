@@ -11,6 +11,7 @@
   <header class="zaglavlje">
     <div class="container">
       <a href="{{ url_for('javni.naslovna') }}" class="ime-portala">{{ ime_portala }}</a>
+      {% block meni %}{% endblock %}
     </div>
   </header>
 

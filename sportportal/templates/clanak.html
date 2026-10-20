@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "javna_stranica.html" %}
 
 {% block naslov %}{{ clanak.naslov }} – {% endblock %}
 
@@ -10,7 +10,7 @@
   <article>
     <h1>{{ clanak.naslov }}</h1>
     <p class="podaci-clanka">
-      {{ clanak.kategorija }}{% if clanak.datum_objave %} · {{ clanak.datum_objave | datum_objave }}{% endif %}
+      {%- include "_link_kategorije.html" %}{% if clanak.datum_objave %} · {{ clanak.datum_objave | datum_objave }}{% endif %}
     </p>
     <p class="uvod">{{ clanak.uvod }}</p>
     {% for pasus in clanak.tekst | pasusi %}

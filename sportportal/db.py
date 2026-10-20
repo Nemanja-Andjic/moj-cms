@@ -41,15 +41,20 @@ def init_app(app):
     app.cli.add_command(napravi_bazu_komanda)
 
 
-def objavljeni_clanci():
-    """Najviše 20 objavljenih članaka, najnoviji gore."""
+def objavljeni_clanci(id_kategorije=None):
+    """Najviše 20 objavljenih članaka, najnoviji gore.
+
+    Uz `id_kategorije` vraća samo članke iz te kategorije.
+    """
     return get_db().execute(
-        "SELECT clanak.id, naslov, uvod, datum_objave, kategorija.ime AS kategorija"
+        "SELECT clanak.id, naslov, uvod, datum_objave, kategorija_id,"
+        " kategorija.ime AS kategorija"
         " FROM clanak JOIN kategorija ON kategorija.id = clanak.kategorija_id"
-        " WHERE stanje = 'objavljen'"
+        " WHERE stanje = 'objavljen' AND (? IS NULL OR kategorija_id = ?)"
         # Članci objavljeni u istoj sekundi: noviji ima veći id.
         " ORDER BY datum_objave DESC, clanak.id DESC"
-        " LIMIT 20"
+        " LIMIT 20",
+        (id_kategorije, id_kategorije),
     ).fetchall()
 
 
@@ -73,14 +78,30 @@ def sacuvaj_admina(korisnicko_ime, hash_lozinke):
     baza.commit()
 
 
+# Mala slova naše abecede, redom. SQLite slova poredi po kodu, pa bi
+# "Šah" završio iza "Zumba"; zato kategorije redamo u Pythonu.
+ABECEDA = "abcčćdđefghijklmnoprsštuvzž"
+
+
+def abecedni_kljuc(ime):
+    """Ključ za sortiranje imena po našoj abecedi, bez obzira na velika slova.
+
+    Znakovi kojih nema u abecedi (q, w, x, y, cifre...) idu iza slova.
+    """
+    return [
+        (0, ABECEDA.index(znak)) if znak in ABECEDA else (1, ord(znak))
+        for znak in ime.casefold()
+    ]
+
+
 def kategorije():
-    """Sve kategorije sa brojem članaka u svakoj, poredane po imenu."""
-    return get_db().execute(
+    """Sve kategorije sa brojem članaka u svakoj, poredane po abecedi."""
+    redovi = get_db().execute(
         "SELECT kategorija.id, ime, COUNT(clanak.id) AS broj_clanaka"
         " FROM kategorija LEFT JOIN clanak ON clanak.kategorija_id = kategorija.id"
         " GROUP BY kategorija.id"
-        " ORDER BY ime_za_poredjenje"
     ).fetchall()
+    return sorted(redovi, key=lambda red: abecedni_kljuc(red["ime"]))
 
 
 def kategorija(id_kategorije):
@@ -193,7 +214,7 @@ def clanak(id_clanka):
 def clanak_za_citanje(id_clanka):
     """Članak sa imenom kategorije, za stranicu članka, ili None ako ne postoji."""
     return get_db().execute(
-        "SELECT clanak.id, naslov, uvod, tekst, stanje, datum_objave,"
+        "SELECT clanak.id, naslov, uvod, tekst, stanje, datum_objave, kategorija_id,"
         " kategorija.ime AS kategorija"
         " FROM clanak JOIN kategorija ON kategorija.id = clanak.kategorija_id"
         " WHERE clanak.id = ?",

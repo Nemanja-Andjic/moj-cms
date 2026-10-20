@@ -72,7 +72,7 @@ def test_naslovna_redja_clanke_po_datumu_objave_najnoviji_gore(app, admin_klijen
         < html.index("Srednji članak")
         < html.index("Najstariji članak")
     )
-    assert "Fudbal · 10.03.2026." in html
+    assert "Fudbal</a> · 10.03.2026." in html
 
 
 def test_naslovna_prikazuje_najvise_20_clanaka(app, admin_klijent, client):
@@ -118,7 +118,7 @@ def test_stranica_clanka_prikazuje_cijeli_clanak(app, admin_klijent, client):
     assert odgovor.status_code == 200
     html = html_bez_razmaka(odgovor)
     assert "<h1>Finale lige</h1>" in html
-    assert "Košarka · 15.05.2026." in html
+    assert "Košarka</a> · 15.05.2026." in html
     assert "Odlučujuća utakmica." in html
     # Prazan red u tekstu pravi novi pasus.
     assert "<p>Prvi pasus, i dalje prvi.</p>" in html
@@ -184,8 +184,8 @@ def test_ponovo_objavljen_clanak_zadrzava_prvobitni_datum_objave(app, admin_klij
     assert "14.02.2026." in admin_klijent.get("/clanak/1").get_data(as_text=True)
     objavi(admin_klijent, 1)
 
-    assert "Fudbal · 14.02.2026." in html_bez_razmaka(admin_klijent.get("/"))
-    assert "Fudbal · 14.02.2026." in html_bez_razmaka(admin_klijent.get("/clanak/1"))
+    assert "Fudbal</a> · 14.02.2026." in html_bez_razmaka(admin_klijent.get("/"))
+    assert "Fudbal</a> · 14.02.2026." in html_bez_razmaka(admin_klijent.get("/clanak/1"))
 
 
 def test_izmjena_objavljenog_clanka_se_odmah_vidi_na_sajtu(admin_klijent):
@@ -285,3 +285,126 @@ def test_clanci_objavljeni_u_istoj_sekundi_noviji_gore(app, admin_klijent):
     html = admin_klijent.get("/").get_data(as_text=True)
 
     assert html.index("Drugi objavljen") < html.index("Prvi objavljen")
+
+
+def meni(html):
+    """Samo dio HTML-a sa menijem kategorija."""
+    pocetak = html.index('<nav class="meni-kategorija">')
+    return html[pocetak : html.index("</nav>", pocetak)]
+
+
+def test_meni_prikazuje_sve_kategorije_abecedno(admin_klijent, client):
+    for ime in ("Tenis", "fudbal", "Košarka"):
+        dodaj_kategoriju(admin_klijent, ime)
+    # Kategorija bez članaka je i dalje u meniju.
+    napravi_clanak(admin_klijent, "Derbi", kategorija_id=2)
+    objavi(admin_klijent, 1)
+
+    html = meni(html_bez_razmaka(client.get("/")))
+
+    assert '<a href="/kategorija/2">fudbal</a>' in html
+    assert '<a href="/kategorija/3">Košarka</a>' in html
+    assert '<a href="/kategorija/1">Tenis</a>' in html
+    assert html.index("fudbal") < html.index("Košarka") < html.index("Tenis")
+
+
+def test_meni_je_na_svakoj_javnoj_stranici(admin_klijent, client):
+    dodaj_kategoriju(admin_klijent, "Fudbal")
+    napravi_clanak(admin_klijent, "Derbi")
+    objavi(admin_klijent, 1)
+
+    for adresa in ("/", "/clanak/1", "/kategorija/1", "/ova-adresa-ne-postoji"):
+        html = html_bez_razmaka(client.get(adresa))
+        assert '<a href="/kategorija/1">Fudbal</a>' in meni(html), adresa
+
+
+def test_stranica_kategorije_prikazuje_njene_clanke_najnoviji_gore(
+    app, admin_klijent, client
+):
+    dodaj_kategoriju(admin_klijent, "Fudbal")
+    dodaj_kategoriju(admin_klijent, "Košarka")
+    napravi_clanak(admin_klijent, "Stariji derbi", kategorija_id=1, uvod="Uvod derbija.")
+    napravi_clanak(admin_klijent, "Finale lige", kategorija_id=2)
+    napravi_clanak(admin_klijent, "Noviji derbi", kategorija_id=1)
+    for id_clanka in (1, 2, 3):
+        objavi(admin_klijent, id_clanka)
+    postavi_datum_objave(app, 1, "2026-03-01 12:00:00")
+    postavi_datum_objave(app, 3, "2026-03-10 12:00:00")
+
+    odgovor = client.get("/kategorija/1")
+
+    assert odgovor.status_code == 200
+    html = html_bez_razmaka(odgovor)
+    assert "<h1>Fudbal</h1>" in html
+    # Iste kartice kao na naslovnoj: naslov kao link, kategorija, datum i uvod.
+    assert '<h2><a href="/clanak/3">Noviji derbi</a></h2>' in html
+    assert "10.03.2026." in html
+    assert "Uvod derbija." in html
+    assert html.index("Noviji derbi") < html.index("Stariji derbi")
+    assert "Finale lige" not in html
+    assert "U ovoj kategoriji još nema članaka" not in html
+
+
+def test_stranica_kategorije_prikazuje_najvise_20_clanaka(app, admin_klijent, client):
+    dodaj_kategoriju(admin_klijent, "Fudbal")
+    for broj in range(1, 22):
+        napravi_clanak(admin_klijent, f"Članak broj {broj}.")
+        objavi(admin_klijent, broj)
+        postavi_datum_objave(app, broj, f"2026-03-{broj:02d} 12:00:00")
+
+    html = client.get("/kategorija/1").get_data(as_text=True)
+
+    assert html.count("<article>") == 20
+    assert "Članak broj 21." in html
+    assert "Članak broj 1." not in html
+
+
+def test_nacrt_se_ne_vidi_na_stranici_kategorije(admin_klijent, client):
+    dodaj_kategoriju(admin_klijent, "Fudbal")
+    napravi_clanak(admin_klijent, "Objavljen derbi")
+    napravi_clanak(admin_klijent, "Tajni nacrt")
+    objavi(admin_klijent, 1)
+
+    html = client.get("/kategorija/1").get_data(as_text=True)
+
+    assert "Objavljen derbi" in html
+    assert "Tajni nacrt" not in html
+
+
+def test_kategorija_bez_objavljenih_clanaka_ima_poruku(admin_klijent, client):
+    dodaj_kategoriju(admin_klijent, "Tenis")
+    napravi_clanak(admin_klijent, "Tajni nacrt")
+
+    html = client.get("/kategorija/1").get_data(as_text=True)
+
+    assert "<h1>Tenis</h1>" in html
+    assert "U ovoj kategoriji još nema članaka." in html
+    assert "<article>" not in html
+
+
+def test_nepostojeca_kategorija_daje_404(client):
+    odgovor = client.get("/kategorija/99")
+
+    assert odgovor.status_code == 404
+    assert "Stranica nije pronađena" in odgovor.get_data(as_text=True)
+
+
+def test_kategorija_je_link_u_kartici_i_na_stranici_clanka(admin_klijent, client):
+    dodaj_kategoriju(admin_klijent, "Fudbal")
+    napravi_clanak(admin_klijent, "Derbi")
+    objavi(admin_klijent, 1)
+
+    link = '<p class="podaci-clanka"><a href="/kategorija/1">Fudbal</a> ·'
+    for adresa in ("/", "/kategorija/1", "/clanak/1"):
+        assert link in html_bez_razmaka(client.get(adresa)), adresa
+
+
+def test_meni_poredi_po_nasoj_abecedi(admin_klijent, client):
+    for ime in ("Zumba", "Šah", "Ćirilica", "Čelik", "Đački sport", "Dres", "Sport"):
+        dodaj_kategoriju(admin_klijent, ime)
+
+    html = meni(html_bez_razmaka(client.get("/")))
+
+    redoslijed = ["Čelik", "Ćirilica", "Dres", "Đački sport", "Sport", "Šah", "Zumba"]
+    pozicije = [html.index(f">{ime}</a>") for ime in redoslijed]
+    assert pozicije == sorted(pozicije)
