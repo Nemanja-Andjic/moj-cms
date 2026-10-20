@@ -2,7 +2,7 @@ import os
 
 from flask import Flask
 
-from . import admin, db, javni
+from . import admin, db, javni, probni_podaci
 
 
 def create_app(podesavanja=None):
@@ -31,6 +31,7 @@ def create_app(podesavanja=None):
     app.register_blueprint(javni.bp)
     app.register_blueprint(admin.bp)
     app.cli.add_command(admin.napravi_admina_komanda)
+    app.cli.add_command(probni_podaci.ubaci_probne_podatke_komanda)
 
     # Ime portala je dostupno u svim šablonima kao `ime_portala`.
     @app.context_processor
