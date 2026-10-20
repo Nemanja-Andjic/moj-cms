@@ -1,0 +1,2 @@
+{# Kategorija članka kao link na stranicu kategorije. Treba `clanak` sa poljima kategorija i kategorija_id. -#}
+<a href="{{ url_for('javni.kategorija', id_kategorije=clanak.kategorija_id) }}">{{ clanak.kategorija }}</a>

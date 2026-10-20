@@ -18,6 +18,25 @@
   text-decoration: underline;
 }
 
+/* Meni sa kategorijama, ispod imena portala. Na uskom ekranu prelazi u više redova. */
+.meni-kategorija ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.meni-kategorija li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.meni-kategorija a {
+  color: var(--pico-primary-inverse);
+}
+
 .greska {
   color: var(--pico-del-color);
 }

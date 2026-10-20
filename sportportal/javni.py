@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, abort, render_template, session
 
-from .db import clanak_za_citanje, objavljeni_clanci
+from . import db
 
 # Javni sajt: stranice koje vidi svaki posjetilac.
 bp = Blueprint("javni", __name__)
@@ -11,12 +11,12 @@ bp = Blueprint("javni", __name__)
 
 @bp.route("/")
 def naslovna():
-    return render_template("naslovna.html", clanci=objavljeni_clanci())
+    return render_template("naslovna.html", clanci=db.objavljeni_clanci())
 
 
 @bp.route("/clanak/<int:id_clanka>")
 def clanak(id_clanka):
-    clanak = clanak_za_citanje(id_clanka)
+    clanak = db.clanak_za_citanje(id_clanka)
     # Nacrt vidi samo prijavljeni admin (pregled prije objave). Posjetilac
     # dobija istu stranicu kao za članak koji ne postoji.
     if clanak is None or (
@@ -25,6 +25,26 @@ def clanak(id_clanka):
         abort(404)
 
     return render_template("clanak.html", clanak=clanak)
+
+
+@bp.route("/kategorija/<int:id_kategorije>")
+def kategorija(id_kategorije):
+    kategorija = db.kategorija(id_kategorije)
+    if kategorija is None:
+        abort(404)
+
+    return render_template(
+        "kategorija.html",
+        kategorija=kategorija,
+        clanci=db.objavljeni_clanci(id_kategorije),
+    )
+
+
+# Meni na vrhu javnih stranica: {% for k in kategorije_za_meni() %}. Sve
+# kategorije, i one bez članaka, poredane po imenu.
+@bp.app_template_global("kategorije_za_meni")
+def kategorije_za_meni():
+    return db.kategorije()
 
 
 # Datum objave u šablonu: {{ clanak.datum_objave | datum_objave }} daje npr. 20.10.2026.

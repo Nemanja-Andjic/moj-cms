@@ -1,0 +1,8 @@
+{# Kartica jednog članka u listi (naslovna, stranica kategorije). #}
+<article>
+  <h2><a href="{{ url_for('javni.clanak', id_clanka=clanak.id) }}">{{ clanak.naslov }}</a></h2>
+  <p class="podaci-clanka">
+    {%- include "_link_kategorije.html" %} · {{ clanak.datum_objave | datum_objave -}}
+  </p>
+  <p>{{ clanak.uvod }}</p>
+</article>

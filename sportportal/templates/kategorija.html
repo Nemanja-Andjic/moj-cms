@@ -1,0 +1,13 @@
+{% extends "javna_stranica.html" %}
+
+{% block naslov %}{{ kategorija.ime }} – {% endblock %}
+
+{% block sadrzaj %}
+  <h1>{{ kategorija.ime }}</h1>
+
+  {% for clanak in clanci %}
+    {% include "_kartica_clanka.html" %}
+  {% else %}
+    <p>U ovoj kategoriji još nema članaka.</p>
+  {% endfor %}
+{% endblock %}
